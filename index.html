@@ -10,18 +10,34 @@
   /* global nn */
   
   let canvas, ctx
+  let palette = []
   
+  function choosePalette () {
+    
+    for (let i = 0; i < 8; i++) {
+      let r = Math.round(Math.random() * 255)
+      let g = Math.round(Math.random() * 255)
+      let b = Math.round(Math.random() * 255)
+      let color = {red: r, green: g, blue: b}
+      palette.push(color)
+    }
+    
+    console.log(palette)
+  }
+
+
   function setup () {
     nn.get('body').css({ margin: '0', height: '100vh' })
     canvas = nn.create('canvas').addTo('body')
     canvas.width = nn.width // match the window's width
     canvas.height = nn.height // match the window's height
     ctx = canvas.getContext('2d')
+    choosePalette()
   }
   
   function draw () {
     requestAnimationFrame(draw)
-    // draw something ...
+    
   }
   
   nn.on('load', setup)
