@@ -151,10 +151,10 @@
       requestAnimationFrame(draw);
       for (let i = 0; i < numberOfColors; i++) {
         ctx.fillStyle = rgbPalette[i];
-        let x = 0;
-        let y = canvas.height * (i / numberOfColors);
-        let width = canvas.width / 2;
-        let height = canvas.height / numberOfColors;
+        let x = canvas.width * (i / numberOfColors);
+        let y = 0;
+        let width = canvas.width / numberOfColors;
+        let height = canvas.height / 2;
         ctx.fillRect(x, y, width, height);
       }
     }
