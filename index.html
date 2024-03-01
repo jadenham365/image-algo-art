@@ -1,110 +1,166 @@
 <!DOCTYPE html>
 <html lang="en-US">
-	<head>
-		<meta charset="utf-8">
-		<title>Random Palette Generator</title>
-	</head>
-	<body>
-		<script src="https://cdn.jsdelivr.net/gh/netizenorg/netnet-standard-library/build/nn.min.js"></script>
-<script>
-  /* global nn */
-  
-  let canvas, ctx
-  let rgbPalette = []
-  let hslPalette = []
-  
-  function rgbToHsl(r, g, b) {
-    // Normalize RGB values
-    r /= 255;
-    g /= 255;
-    b /= 255;
+<head>
+  <meta charset="utf-8">
+  <title>Random Palette Generator</title>
+</head>
+<body>
+  <script src="https://cdn.jsdelivr.net/gh/netizenorg/netnet-standard-library/build/nn.min.js"></script>
+  <script>
+    /* global nn */
 
-    // Find maximum and minimum values
-    let max = Math.max(r, g, b);
-    let min = Math.min(r, g, b);
+    let canvas, ctx;
+    let rgbPalette = [];
+    let hslPalette = [];
 
-    // Calculate the lightness
-    let l = (max + min) / 2;
+    function rgbToHsl(r, g, b) {
+      // Normalize RGB values
+      r /= 255;
+      g /= 255;
+      b /= 255;
 
-    let h, s;
-    if (max === min) {
+      // Find maximum and minimum values
+      let max = Math.max(r, g, b);
+      let min = Math.min(r, g, b);
+
+      // Calculate the lightness
+      let l = (max + min) / 2;
+
+      let h, s;
+      if (max === min) {
         // Achromatic case: no hue
         h = 0;
         s = 0;
-    } else {
+      } else {
         // Calculate the saturation
         s = l > 0.5 ? (max - min) / (2 - max - min) : (max - min) / (max + min);
 
         // Calculate the hue
         switch (max) {
-            case r:
-                h = (g - b) / (max - min) + (g < b ? 6 : 0);
-                break;
-            case g:
-                h = (b - r) / (max - min) + 2;
-                break;
-            case b:
-                h = (r - g) / (max - min) + 4;
-                break;
+          case r:
+            h = (g - b) / (max - min) + (g < b ? 6 : 0);
+            break;
+          case g:
+            h = (b - r) / (max - min) + 2;
+            break;
+          case b:
+            h = (r - g) / (max - min) + 4;
+            break;
         }
         h *= 60; // Convert hue to degrees
-    }
-
-    return `${h}, ${s * 100}%, ${l * 100}%`
-}
-
-  
-  function choosePalette () {
-    
-    for (let i = 0; i < 8; i++) {
-      let r = Math.round(Math.random() * 255)
-      let g = Math.round(Math.random() * 255)
-      let b = Math.round(Math.random() * 255)
-      let rgbString = `rgb(${r}, ${g}, ${b})`
-      rgbPalette.push(rgbString)
-      let hslString = rgbToHsl(r, g, b)
-      hslPalette.push(hslString)
-      
-    }
-    
-  }
-
-
-  function setup () {
-    nn.get('body').css({ margin: '0', height: '100vh' })
-    canvas = nn.create('canvas').addTo('body')
-    canvas.width = nn.width // match the window's width
-    canvas.height = nn.height // match the window's height
-    ctx = canvas.getContext('2d')
-    choosePalette()
-  }
-  
-  
-  function draw () {
-    requestAnimationFrame(draw)
-    for (let i = 0; i < 8; i++) {
-      ctx.fillStyle = rgbPalette[i]
-      let x
-      let y
-      if (i < 4) {
-        x = canvas.width * (i / 4)
-        y = 0
-      } else {
-        x = canvas.width * ((i - 4) / 4)
-        y = canvas.height / 2
       }
-      let width = canvas.width / 4
-      let height = canvas.height / 2
-      ctx.fillRect(x, y, width, height)
-      
-      
+
+      return { hue: h, sat: s * 100, lit: l * 100 };
     }
-    
-  }
-  
-  nn.on('load', setup)
-  nn.on('load', draw)
-  
-</script>
-	</body>
+
+    function hslToRgb(h, s, l) {
+      // Convert hue to range 0-360 degrees
+      let hue = h % 360;
+      if (hue < 0) {
+        hue += 360;
+      }
+
+      // Convert saturation and lightness to range 0-1
+      let saturation = s / 100;
+      let lightness = l / 100;
+
+      // Calculate chroma
+      let chroma = (1 - Math.abs(2 * lightness - 1)) * saturation;
+
+      // Calculate hue prime
+      let huePrime = hue / 60;
+
+      // Calculate second largest component
+      let x = chroma * (1 - Math.abs(huePrime % 2 - 1));
+
+      let r1, g1, b1;
+      if (huePrime >= 0 && huePrime < 1) {
+        [r1, g1, b1] = [chroma, x, 0];
+      } else if (huePrime >= 1 && huePrime < 2) {
+        [r1, g1, b1] = [x, chroma, 0];
+      } else if (huePrime >= 2 && huePrime < 3) {
+        [r1, g1, b1] = [0, chroma, x];
+      } else if (huePrime >= 3 && huePrime < 4) {
+        [r1, g1, b1] = [0, x, chroma];
+      } else if (huePrime >= 4 && huePrime < 5) {
+        [r1, g1, b1] = [x, 0, chroma];
+      } else if (huePrime >= 5 && huePrime < 6) {
+        [r1, g1, b1] = [chroma, 0, x];
+      }
+
+      // Calculate lightness adjustment
+      let m = lightness - chroma / 2;
+
+      // Calculate final RGB values
+      let r = Math.round((r1 + m) * 255);
+      let g = Math.round((g1 + m) * 255);
+      let b = Math.round((b1 + m) * 255);
+
+      return `rgb(${r}, ${g}, ${b})`;
+    }
+
+    function choosePalette() {
+      for (let i = 0; i < numberOfColors; i++) {
+        let r = Math.round(Math.random() * 255);
+        let g = Math.round(Math.random() * 255);
+        let b = Math.round(Math.random() * 255);
+        let hslObject = rgbToHsl(r, g, b);
+        hslPalette.push(hslObject);
+      }
+
+      hslPalette.sort((a, b) => a.hue - b.hue);
+      for (let i = 0; i < numberOfColors; i++) {
+        let color = hslPalette[i];
+        let h = color.hue;
+        let s = color.sat;
+        let l = color.lit;
+        let rgbString = hslToRgb(h, s, l);
+        rgbPalette.push(rgbString);
+      }
+    }
+
+    let numberOfColors;
+
+    function setup() {
+      nn.get('body').css({ margin: '0', height: '100vh' });
+      canvas = nn.create('canvas').addTo('body');
+      canvas.width = nn.width; // match the window's width
+      canvas.height = nn.height; // match the window's height
+      ctx = canvas.getContext('2d');
+
+      // Ask the user to input a number from 1 to 64
+      let userInput = prompt("Please enter a number from 1 to 64:");
+
+      // Parse the user input as an integer
+      numberOfColors = parseInt(userInput);
+
+      // Check if the input is a valid number from 1 to 64
+      if (!isNaN(numberOfColors) && numberOfColors >= 1 && numberOfColors <= 64) {
+        // Valid input, proceed with using numberOfColors variable
+        console.log("Number of colors chosen:", numberOfColors);
+
+        // Call the choosePalette() function
+        choosePalette();
+      } else {
+        // Invalid input, display an error message
+        console.log("Invalid input. Please enter a number from 1 to 64.");
+      }
+    }
+
+    function draw() {
+      requestAnimationFrame(draw);
+      for (let i = 0; i < numberOfColors; i++) {
+        ctx.fillStyle = rgbPalette[i];
+        let x = 0;
+        let y = canvas.height * (i / numberOfColors);
+        let width = canvas.width / 2;
+        let height = canvas.height / numberOfColors;
+        ctx.fillRect(x, y, width, height);
+      }
+    }
+
+    nn.on('load', setup);
+    nn.on('load', draw);
+  </script>
+</body>
 </html>
