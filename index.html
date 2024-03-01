@@ -2,7 +2,7 @@
 <html lang="en-US">
 	<head>
 		<meta charset="utf-8">
-		<title>Imerge</title>
+		<title>Random Palette Generator</title>
 	</head>
 	<body>
 		<script src="https://cdn.jsdelivr.net/gh/netizenorg/netnet-standard-library/build/nn.min.js"></script>
@@ -10,7 +10,49 @@
   /* global nn */
   
   let canvas, ctx
-  let palette = []
+  let rgbPalette = []
+  let hslPalette = []
+  
+  function rgbToHsl(r, g, b) {
+    // Normalize RGB values
+    r /= 255;
+    g /= 255;
+    b /= 255;
+
+    // Find maximum and minimum values
+    let max = Math.max(r, g, b);
+    let min = Math.min(r, g, b);
+
+    // Calculate the lightness
+    let l = (max + min) / 2;
+
+    let h, s;
+    if (max === min) {
+        // Achromatic case: no hue
+        h = 0;
+        s = 0;
+    } else {
+        // Calculate the saturation
+        s = l > 0.5 ? (max - min) / (2 - max - min) : (max - min) / (max + min);
+
+        // Calculate the hue
+        switch (max) {
+            case r:
+                h = (g - b) / (max - min) + (g < b ? 6 : 0);
+                break;
+            case g:
+                h = (b - r) / (max - min) + 2;
+                break;
+            case b:
+                h = (r - g) / (max - min) + 4;
+                break;
+        }
+        h *= 60; // Convert hue to degrees
+    }
+
+    return `${h}, ${s * 100}%, ${l * 100}%`
+}
+
   
   function choosePalette () {
     
@@ -18,8 +60,11 @@
       let r = Math.round(Math.random() * 255)
       let g = Math.round(Math.random() * 255)
       let b = Math.round(Math.random() * 255)
-      let colorString = `rgb(${r}, ${g}, ${b})`
-      palette.push(colorString)
+      let rgbString = `rgb(${r}, ${g}, ${b})`
+      rgbPalette.push(rgbString)
+      let hslString = rgbToHsl(r, g, b)
+      hslPalette.push(hslString)
+      
     }
     
     console.log(palette)
@@ -35,10 +80,11 @@
     choosePalette()
   }
   
+  
   function draw () {
     requestAnimationFrame(draw)
     for (let i = 0; i < 8; i++) {
-      ctx.fillStyle = palette[i]
+      ctx.fillStyle = rgbPalette[i]
       let x
       let y
       if (i < 4) {
@@ -49,8 +95,16 @@
         y = canvas.height / 2
       }
       let width = canvas.width / 4
-      let height = canvas.height / 2
+      let height = canvas.height / 4
       ctx.fillRect(x, y, width, height)
+      
+      ctx.fillStyle = hslPalette[i]
+       if (i < 4) {
+        y = canvas.height / 4
+      } else {
+        y = canvas.height * (3/4)
+      }
+      ctx.fillRect(x,y,width,height)
     }
     
   }
