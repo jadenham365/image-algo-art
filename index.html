@@ -153,9 +153,17 @@
       mouseX = event.clientX;
       mouseY = event.clientY;
 });
-    let isMouseDown = false;
+    let colorSelected = false;
+    let xAtClick;
+    let yAtClick;
     document.addEventListener('mousedown', function(event) {
-      isMouseDown = true;
+      if (mouseY < canvas.height / 2) {
+        colorSelected = true;
+        xAtClick = mouseX;
+        yAtClick = mouseY;
+      } else {
+        colorSelected = false;
+      }
 });
 
     function draw() {
@@ -170,7 +178,14 @@
       }
       
       if (mouseY < canvas.height / 2) {
-        let pixelData = ctx.getImageData(mouseX, mouseY, 1, 1).data;
+        
+        let pixelData;
+        if (colorSelected) {
+          pixelData = ctx.getImageData(xAtClick, yAtClick, 1, 1).data;
+        } else {
+          pixelData = ctx.getImageData(mouseX, mouseY, 1, 1).data;
+        }
+        
 
   // Extract RGB values from pixel data
         let r = pixelData[0];
