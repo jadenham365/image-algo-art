@@ -146,6 +146,17 @@
         console.log("Invalid input. Please enter a number from 1 to 64.");
       }
     }
+    
+    let mouseX;
+    let mouseY;
+    document.addEventListener('mousemove', function(event) {
+      mouseX = event.clientX;
+      mouseY = event.clientY;
+});
+    let isMouseDown = false;
+    document.addEventListener('mousedown', function(event) {
+      isMouseDown = true;
+});
 
     function draw() {
       requestAnimationFrame(draw);
@@ -156,6 +167,22 @@
         let width = canvas.width / numberOfColors;
         let height = canvas.height / 2;
         ctx.fillRect(x, y, width, height);
+      }
+      
+      if (mouseY < canvas.height / 2) {
+        let pixelData = ctx.getImageData(mouseX, mouseY, 1, 1).data;
+
+  // Extract RGB values from pixel data
+        let r = pixelData[0];
+        let g = pixelData[1];
+        let b = pixelData[2];
+
+        ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+        let x2 = (canvas.width / 20);
+        let y2 = (canvas.height / 2) + (canvas.height / 20);
+        let width2 = (canvas.width / 2) - (canvas.width / 10);
+        let height2 = (canvas.height /2) - (canvas.height / 10);
+        ctx.fillRect (x2, y2, width2, height2);
       }
     }
 
